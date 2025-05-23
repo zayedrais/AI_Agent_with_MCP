@@ -28,7 +28,7 @@ This project implements a Model Context Protocol (MCP) server using Google's Age
 ## Prerequisites
 
 - Python 3.9+
-- Groq and Openruter Key
+- Groq and OpenRouter Key
 
 ## Setup
 
@@ -123,10 +123,3 @@ To add new tools:
 1. Create a new file in the `tools/` directory
 2. Implement the tool functionality with comprehensive docstrings
 3. Import and use the tool in your agents
-
-## Resources
-
-- [Model Context Protocol (MCP) Documentation](https://modelcontextprotocol.io/)
-- [Google Agent Development Kit (ADK) Documentation](https://ai.google.dev/docs/agents_api)
-- [Google Generative AI Documentation](https://ai.google.dev/)
-- [FastMCP Documentation](https://fastmcp.readthedocs.io/)

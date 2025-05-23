@@ -1,0 +1,6 @@
+{
+  "timestamp": "20250524_000042",
+  "prompt": "python code for read the xls file and store in dataframe",
+  "generated_code": "import pandas as pd\n\ndef read_excel_to_dataframe(file_path):\n    \"\"\"\n    Reads an Excel file and returns a pandas DataFrame.\n    \n    Args:\n        file_path (str): Path to the Excel file (.xls or .xlsx)\n    \n    Returns:\n        pd.DataFrame or dict: DataFrame if successful, error dict if failed\n    \"\"\"\n    try:\n        # Read Excel file into DataFrame\n        df = pd.read_excel(file_path)\n        return df\n    except FileNotFoundError:\n        return {'error': f'File not found: {file_path}'}\n    except Exception as e:\n        return {'error': f'Failed to read Excel file: {str(e)}'}\n\n# Example usage:\n# df = read_excel_to_dataframe('data.xls')\n# if isinstance(df, pd.DataFrame):\n#     print(df.head())",
+  "file_name": "python_code_for_read.py"
+}

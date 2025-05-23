@@ -1,0 +1,6 @@
+{
+  "timestamp": "20250524_001221",
+  "prompt": "Python code for fibonacci series",
+  "generated_code": "def fibonacci(n_terms):\n    \"\"\"\n    Generate Fibonacci sequence up to n terms\n    \n    Args:\n        n_terms (int): Number of terms to generate\n        \n    Returns:\n        list: Fibonacci sequence as a list\n    \"\"\"\n    if n_terms <= 0:\n        return []\n    elif n_terms == 1:\n        return [0]\n    \n    sequence = [0, 1]\n    \n    while len(sequence) < n_terms:\n        next_num = sequence[-1] + sequence[-2]\n        sequence.append(next_num)\n    \n    return sequence\n\n# Example usage\nif __name__ == \"__main__\":\n    num_terms = 10\n    fib_sequence = fibonacci(num_terms)\n    print(f\"First {num_terms} Fibonacci numbers:\")\n    print(fib_sequence)",
+  "file_name": "Python_code_for_fibo.py"
+}

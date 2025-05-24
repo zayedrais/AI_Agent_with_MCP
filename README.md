@@ -2,6 +2,9 @@
 
 This project implements a Model Context Protocol (MCP) server using Google's Agent Development Kit (ADK) for building intelligent agents and tools. The system features multiple specialized agents that collaborate through a coordinator agent to handle different types of requests.
 
+[Details in Medium Post](https://zayedrais.medium.com/building-a-mcp-server-with-ai-tools-and-agents-a4cd71b05a36)
+
+
 ## Project Structure
 
 ```
@@ -29,6 +32,9 @@ This project implements a Model Context Protocol (MCP) server using Google's Age
 
 - Python 3.9+
 - Groq and OpenRouter Key
+
+## Working Flow Architecture
+![image](https://github.com/user-attachments/assets/dfc10783-23b3-4804-b2d3-a7aa07a9ab09)
 
 ## Setup
 

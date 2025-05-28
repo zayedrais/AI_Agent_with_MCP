@@ -150,7 +150,8 @@ Your analysis should be data-driven and insightful, helping to understand the da
         
         # Set up session management and runner
         self.session_service = InMemorySessionService()
-        self.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+        # The create_session call will be properly awaited during the first process call
+        # instead of being called here in the constructor
         
         # Create runner for the agent
         self.analysis_runner = Runner(
@@ -496,7 +497,7 @@ Your analysis should be data-driven and insightful, helping to understand the da
             # Create unique session ID for this request
             import uuid
             session_id = f"analysis_session_{str(uuid.uuid4())}"
-            self.session_service.create_session(app_name="data_analysis_app", user_id="default_user", session_id=session_id)
+            await self.session_service.create_session(app_name="data_analysis_app", user_id="default_user", session_id=session_id)
             
             # Format as JSON for LLM
             analysis_input_json = json.dumps(analysis_input)

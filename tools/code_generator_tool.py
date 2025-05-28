@@ -139,7 +139,7 @@ Return your response in the following format:
             
             # Create unique session ID for this request
             session_id = f"code_gen_session_{str(uuid.uuid4())}"
-            self.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session_id)
+            await self.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session_id)
             
             # Create the user message
             input_json = {

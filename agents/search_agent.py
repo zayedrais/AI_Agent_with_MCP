@@ -185,7 +185,7 @@ class SearchAgent:
         # Create unique session ID for this request
         import uuid
         session_id = f"search_session_{str(uuid.uuid4())}"
-        self.session_service.create_session(app_name="search_app", user_id="search_user", session_id=session_id)
+        await self.session_service.create_session(app_name="search_app", user_id="search_user", session_id=session_id)
         
         try:
             # Prepare the user message with search results context

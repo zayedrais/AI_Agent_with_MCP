@@ -2,10 +2,14 @@ from fastapi import FastAPI, Request
 from fastmcp import FastMCP
 import json
 import asyncio
+import tracemalloc
 from typing import Dict, Any, List, Optional, Union
 import logging
 import datetime
 import os
+
+# Enable tracemalloc for memory leak debugging
+tracemalloc.start()
 
 # Import the coordinator agent process function
 from agents.coordinator_agent import CoordinatorAgent
@@ -32,6 +36,7 @@ app = FastAPI(
 
 # Create the FastMCP server
 server = FastMCP(app=app)
+# Note: transport-specific settings should be moved to run() call when starting the server
 
 # Function to log interactions
 async def log_interaction(description: str, response: Dict[str, Any]) -> None:

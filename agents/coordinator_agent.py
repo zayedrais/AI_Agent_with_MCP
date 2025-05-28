@@ -113,7 +113,8 @@ Analyze the user's query and determine which agent would best handle it. Return 
         
         # Set up session management and runner
         self.session_service = InMemorySessionService()
-        self.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+        # Create session asynchronously later in an async method instead of in __init__
+        # Will be initialized in first process call
         
         # Create runner for the agent
         self.routing_runner = Runner(
@@ -220,7 +221,8 @@ Analyze the user's query and determine which agent would best handle it. Return 
         # Create unique session ID for this request
         import uuid
         session_id = f"routing_session_{str(uuid.uuid4())}"
-        self.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session_id)
+        # Use create_session_sync method to avoid asyncio issue
+        await self.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session_id)
         
         # Format the query as JSON input for the LLM agent with explicit instructions for proper JSON formatting
         enhanced_prompt = {

@@ -1,0 +1,525 @@
+manifest:
+  version: "0.1.3"
+  schema: https://a2as.org/cert/schema
+  subject:
+    name: zayedrais/ai_agent_with_mcp
+    source: https://github.com/zayedrais/ai_agent_with_mcp
+    branch: main
+    commit: "b1dc1dbf"
+    scope: [agents/search_agent.py, tools/report_generator_tool.py, agents/code_generator_agent.py, agents/coordinator_agent.py,
+      server.py, agents/data_analysis_agent.py, tools/data_reader_tool.py, tools/data_analysis_tool.py, tools/code_generator_tool.py,
+      tools/web_search_tool.py]
+  issued:
+    by: A2AS.org
+    at: '2026-02-11T16:43:41Z'
+    url: https://a2as.org/certified/agents/zayedrais/ai_agent_with_mcp
+  signatures:
+    digest: sha256:IDjtUDzM3soJ27mTa8VsgNkJ0RcbOt5VqyrI-7Y-wHw
+    key: ed25519:3gxRPRiToXdm_Luk3KpUCL0q2IywWI4V3Exsc0RPMuk
+    sig: ed25519:FrokQhNGhcmBBDja7Bbn6kju9wPfWZ3znvksmH2uEcJIrRMYLFNlIaao9KiL5Juz8EbKMAepHgvs3fXG40bBAg
+
+agents:
+  agent.CodeGeneratorTool.code_generation_agent:
+    type: class
+    models: [self.llm_model]
+    params:
+      name: code_generation_agent
+      description: Generates code snippets with concise explanations
+      instruction: [You are a code generation agent that creates high-quality code examples., The user will provide a text
+          prompt describing what code they need., 'Your response must include:', 1. A brief explanation (3-5 sentences) of
+          what the code does, '2. The code snippet itself, properly formatted', 3. The programming language used for the code,
+        'Prefer writing clean, maintainable, and well-commented code. Focus on best practices and include error handling where
+          appropriate.', 'Your code should be clear, concise, and complete, implementing the full functionality described
+          in the prompt.', 'If the language isn''t specified, choose the most appropriate language for the task.', 'Return
+          your response in the following format:', '```json', '{', '"description": "This function reads a CSV file and calculates
+          statistics on numeric columns. It handles file not found errors and ignores non-numeric columns automatically.",',
+        '"language": "python"', '}', '```']
+      input_schema: CodeGenerationInput
+      output_key: code_generation_result
+      class: CodeGeneratorTool
+  agent.DataAnalysisAgent.analysis_agent:
+    type: class
+    models: [self.groq_model]
+    params:
+      name: data_analysis
+      description: Analyzes data and provides insights with visualization recommendations
+      instruction: [You are a data analysis expert that helps analyze datasets and provides meaningful insights., 'Your task
+          is to:', 1. Analyze the data summary provided, 2. Determine if visualizations would be valuable for this dataset,
+        3. Recommend specific types of visualizations if appropriate, 4. Generate a comprehensive report with key findings
+          and recommendations, 'When determining if visualizations are needed and which types to use:', '- Consider the data
+          types (numeric, categorical, datetime)', '- Look for relationships that would be clear in visual form', '- Consider
+          the number of data points and dimensions', '- Not all data requires visualization - only recommend when it adds
+          value', '- If visualization_required is explicitly set to True, always include at least one plot type', 'For the
+          report:', '- Be specific and actionable in your recommendations', '- Focus on patterns, trends, anomalies, and potential
+          insights', '- Structure your response with clear sections', '- Use professional, concise language appropriate for
+          a business report', 'Your analysis should be data-driven and insightful, helping to understand the dataset and identify
+          key patterns or issues.']
+      input_schema: DataAnalysisInput
+      output_schema: DataAnalysisOutput
+      output_key: data_analysis_result
+      class: DataAnalysisAgent
+  agent.SearchAgent.search_agent:
+    type: class
+    models: [self.groq_model]
+    tools: [search]
+    params:
+      name: search_results_formatter
+      description: Formats search results in a clear, readable way.
+      instruction: [You are a helpful agent that formats search results., 1. Analyze the search results provided., 2. Provide
+          a concise summary of the key information., 3. Ensure accuracy and highlight the most relevant points., '4. Format
+          the response in a clear, readable way.']
+      output_key: formatted_search_results
+      class: SearchAgent
+  coordinator:
+    type: instance
+    models: [self.groq_model]
+    params:
+      name: agent_routing
+      description: Routes user queries to the most appropriate specialized agent
+      instruction: [You are a coordinator agent that analyzes user queries and identifies which specialized agent should handle
+          the request., 'Currently, you can route to these agents:', 1. search_agent - Performs web searches and provides
+          information on any topic, '2. data_analysis_agent - Analyzes data from files (PDF, Excel, Word, CSV) and generates
+          reports with visualizations', 3. code_generator_agent - Generates code in various programming languages based on
+          natural language descriptions, 'SEARCH AGENT INDICATORS:', '- Information-seeking queries about general topics',
+        '- Requests for facts, definitions, or current information', '- Questions about "what is", "how does", "tell me about"',
+        '- Simple lookup requests with no need for code examples', '- News, current events, or factual information needs',
+        'DATA ANALYSIS AGENT INDICATORS:', '- Requests to analyze data, files, or documents', '- Queries about generating
+          reports from data', '- Questions mentioning data formats like Excel, CSV, PDF, or Word', '- Requests for data visualization,
+          charts, or graphs', '- Queries about extracting insights or summaries from datasets', 'CODE GENERATOR AGENT INDICATORS:',
+        '- Requests to generate, create, or write code', '- Queries about programming solutions or implementations', '- Mentions
+          of specific programming languages (Python, JavaScript, etc.)', '- Requests for code examples, functions, or algorithms',
+        '- Queries asking how to implement something with code', 'Analyze the user''s query and determine which agent would
+          best handle it. Return a JSON object with:', '- agent_name: "search_agent", "data_analysis_agent", or "code_generator_agent"',
+        '- confidence_score: How confident you are (0.0-1.0)', '- reasoning: Brief justification for your selection']
+      input_schema: CoordinatorInput
+      output_schema: AgentRoutingOutput
+      output_key: agent_routing_decision
+      class: CoordinatorAgent
+
+models:
+  self.groq_model:
+    type: literal
+    agents: [agent.SearchAgent.search_agent, coordinator, agent.DataAnalysisAgent.analysis_agent]
+  self.llm_model:
+    type: literal
+    agents: [agent.CodeGeneratorTool.code_generation_agent]
+
+tools:
+  search:
+    type: function
+    agents: [agent.SearchAgent.search_agent]
+    params:
+      module: self.search_tool.search
+      description: "Search the knowledge base for relevant information\n\nArgs:\n    query: The search query string\n    \n\
+        Returns:\n    Dict containing search results or error information"
+
+imports:
+  Any: typing.Any
+  asyncio: asyncio
+  base64: base64
+  BaseModel: pydantic.BaseModel
+  CodeGeneratorAgent: agents.code_generator_agent.CodeGeneratorAgent
+  CodeGeneratorTool: tools.code_generator_tool.CodeGeneratorTool
+  CoordinatorAgent: agents.coordinator_agent.CoordinatorAgent
+  DataAnalysisAgent: agents.data_analysis_agent.DataAnalysisAgent
+  DataAnalysisTool: tools.data_analysis_tool.DataAnalysisTool
+  DataReaderTool: tools.data_reader_tool.DataReaderTool
+  datetime: datetime.datetime
+  DDGS: duckduckgo_search.DDGS
+  Dict: typing.Dict
+  Document: docx.Document
+  docx: docx
+  FastAPI: fastapi.FastAPI
+  FastMCP: fastmcp.FastMCP
+  Field: pydantic.Field
+  Inches: docx.shared.Inches
+  InMemorySessionService: google.adk.sessions.InMemorySessionService
+  io: io
+  json: json
+  List: typing.List
+  LiteLlm: google.adk.models.lite_llm.LiteLlm
+  LlmAgent: google.adk.agents.LlmAgent
+  load_dotenv: dotenv.load_dotenv
+  logging: logging
+  np: numpy
+  Optional: typing.Optional
+  os: os
+  Path: pathlib.Path
+  pd: pandas
+  plt: matplotlib.pyplot
+  Pt: docx.shared.Pt
+  PyPDF2: PyPDF2
+  re: re
+  ReportGeneratorTool: tools.report_generator_tool.ReportGeneratorTool
+  Request: fastapi.Request
+  RGBColor: docx.shared.RGBColor
+  Runner: google.adk.runners.Runner
+  SearchAgent: agents.search_agent.SearchAgent
+  sns: seaborn
+  tracemalloc: tracemalloc
+  types: google.genai.types
+  Union: typing.Union
+  uuid: uuid
+  uvicorn: uvicorn
+  WD_ALIGN_PARAGRAPH: docx.enum.text.WD_ALIGN_PARAGRAPH
+  WD_STYLE_TYPE: docx.enum.style.WD_STYLE_TYPE
+  WebSearchTool: tools.web_search_tool.WebSearchTool
+
+functions:
+  __init__:
+    type: sync
+    module: tools.web_search_tool
+    args: [self]
+  _add_section_to_document:
+    type: sync
+    module: tools.report_generator_tool
+    args: [self, doc, section]
+  _format_parameters_for_agent:
+    type: async
+    module: agents.coordinator_agent
+    args: [self, agent_name, query, original_params]
+    params:
+      returns: Dict
+  _format_results:
+    type: async
+    module: agents.search_agent
+    args: [self, query, search_results, detailed]
+    params:
+      returns: str
+  _get_agent_instance:
+    type: async
+    module: agents.coordinator_agent
+    args: [self, agent_name]
+    params:
+      returns: Any
+  _get_default_insights:
+    type: sync
+    module: agents.data_analysis_agent
+    args: [self]
+    params:
+      returns: Dict
+  _get_extension_for_language:
+    type: sync
+    module: tools.code_generator_tool
+    args: [self, language]
+    params:
+      returns: str
+  _get_visualization_parameters:
+    type: sync
+    module: agents.data_analysis_agent
+    args: [self, df, plot_type]
+    params:
+      returns: Dict
+  _perform_search:
+    type: async
+    module: agents.search_agent
+    args: [self, query, num_results]
+    params:
+      returns: Dict
+  _route_with_llm:
+    type: async
+    module: agents.coordinator_agent
+    args: [self, query]
+    params:
+      returns: tuple
+  _run_llm_analysis:
+    type: async
+    module: agents.data_analysis_agent
+    args: [self, analysis_input]
+    params:
+      returns: Dict
+  _set_up_document_styles:
+    type: sync
+    module: tools.report_generator_tool
+    args: [self, doc]
+  _setup_llm_agent:
+    type: sync
+    module: agents.data_analysis_agent
+    args: [self]
+  analyze_data_endpoint:
+    type: async
+    module: server
+    args: [request]
+  analyze_data_tool:
+    type: tool
+    module: server
+    args: [file_path]
+    params:
+      returns: Dict
+  analyze_dataframe:
+    type: sync
+    module: tools.data_analysis_tool
+    args: [self, df]
+    params:
+      returns: Dict
+  ask_endpoint:
+    type: async
+    module: server
+    args: [request]
+  ask_tool:
+    type: tool
+    module: server
+    args: [query]
+    params:
+      returns: Dict
+  chat_completions:
+    type: async
+    module: server
+    args: [request]
+  create_markdown_report:
+    type: sync
+    module: tools.report_generator_tool
+    args: [self, title, sections, file_name, author, include_timestamp]
+    params:
+      returns: Dict
+  create_report:
+    type: sync
+    module: tools.report_generator_tool
+    args: [self, title, sections, file_name, author, include_timestamp]
+    params:
+      returns: Dict
+  generate_code:
+    type: async
+    module: tools.code_generator_tool
+    args: [self, prompt, language]
+    params:
+      returns: Dict
+  generate_code_endpoint:
+    type: async
+    module: server
+    args: [request]
+  generate_code_tool:
+    type: tool
+    module: server
+    args: [prompt, language, include_requirements]
+    params:
+      returns: Dict
+  generate_code_with_requirements:
+    type: async
+    module: tools.code_generator_tool
+    args: [self, prompt, language, include_requirements]
+    params:
+      returns: Dict
+  generate_plot:
+    type: sync
+    module: tools.data_analysis_tool
+    args: [self, df, plot_type, x_column, y_column, title, hue_column, figsize, save_path]
+    params:
+      returns: Dict
+  generate_report_template:
+    type: sync
+    module: tools.report_generator_tool
+    args: [self, title, file_name]
+    params:
+      returns: Dict
+  list_available_files:
+    type: sync
+    module: tools.data_reader_tool
+    args: [self, file_types]
+    params:
+      returns: Dict
+  log_interaction:
+    type: async
+    module: server
+    args: [description, response]
+    params:
+      returns: None
+  process:
+    type: async
+    module: agents.data_analysis_agent
+    args: [self, exec_spec]
+    params:
+      returns: Dict
+  process_request:
+    type: async
+    module: server
+    args: [query, parameters]
+    params:
+      returns: Dict
+  read_csv_file:
+    type: sync
+    module: tools.data_reader_tool
+    args: [self, file_path]
+    params:
+      returns: Dict
+  read_excel_file:
+    type: sync
+    module: tools.data_reader_tool
+    args: [self, file_path, sheet_name]
+    params:
+      returns: Dict
+  read_file:
+    type: sync
+    module: tools.data_reader_tool
+    args: [self, file_path, sheet_name]
+    params:
+      returns: Dict
+  read_pdf_file:
+    type: sync
+    module: tools.data_reader_tool
+    args: [self, file_path]
+    params:
+      returns: Dict
+  read_word_file:
+    type: sync
+    module: tools.data_reader_tool
+    args: [self, file_path]
+    params:
+      returns: Dict
+  recommend_visualizations:
+    type: sync
+    module: tools.data_analysis_tool
+    args: [self, df]
+    params:
+      returns: Dict
+  register_tools:
+    type: sync
+    module: server
+  save_analysis_json:
+    type: sync
+    module: tools.data_analysis_tool
+    args: [self, analysis_data, file_name]
+    params:
+      returns: Dict
+  search:
+    type: sync
+    module: tools.web_search_tool
+    args: [self, query]
+    params:
+      returns: Dict
+  search_endpoint:
+    type: async
+    module: server
+    args: [request]
+  search_tool:
+    type: tool
+    module: server
+    args: [query, detailed]
+    params:
+      returns: Dict
+  search_web:
+    type: async
+    module: tools.web_search_tool
+    args: [self, query, num_results]
+    params:
+      returns: Dict
+
+variables:
+  GROQ_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv, LiteLlm]
+      path: [agents.search_agent, agents.coordinator_agent, agents.data_analysis_agent]
+  OPENROUTER_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv, LiteLlm]
+      path: [tools.code_generator_tool]
+  PORT:
+    type: env
+    params:
+      caller: [os.environ.get]
+      path: [server]
+
+files:
+  file_name:
+    type: pattern
+    actions: [read]
+    params:
+      caller: [os.path.join]
+      pattern: [self.output_directory, file_name]
+  file_path:
+    type: variable
+    actions: [read, write]
+    params:
+      caller: [doc.save, open, os.path.basename, os.path.join]
+  full_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [os.path.isfile, open, os.path.dirname]
+  img_dir:
+    type: variable
+    actions: [read]
+    params:
+      caller: [os.makedirs]
+  img_file_name:
+    type: pattern
+    actions: [read]
+    params:
+      caller: [os.path.join]
+      pattern: [img_dir, img_file_name]
+  img_path:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  metadata_file_name:
+    type: pattern
+    actions: [read]
+    params:
+      caller: [os.path.join]
+      pattern: [request_folder_path, metadata_file_name]
+  metadata_file_path:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  output_path:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  req_file_path:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  request_folder_name:
+    type: pattern
+    actions: [read]
+    params:
+      caller: [os.path.join]
+      pattern: [self.output_directory, request_folder_name]
+  request_folder_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [os.makedirs]
+  requests_log.txt:
+    type: literal
+    actions: [write, read]
+    params:
+      caller: [open, os.path.exists]
+      alias: [f]
+      variable: LOG_FILE
+  save_path:
+    type: pattern
+    actions: [read]
+    params:
+      caller: [os.path.join]
+      pattern: [self.output_directory, save_path]
+
+networks:
+  api.groq.com:
+    type: api
+    actions: [GET]
+    urls: [/openai/v1/chat/completions]
+    protocols: [https]
+    ports: ["443"]
+    params:
+      caller: [__init__, _setup_llm_agent]
+      links: [api_base]
+  openrouter.ai:
+    type: api
+    actions: [GET]
+    urls: [/api/v1]
+    protocols: [https]
+    ports: ["443"]
+    params:
+      caller: [__init__]
+      links: [api_base]
